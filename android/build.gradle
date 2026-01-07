@@ -1,0 +1,36 @@
+// android/build.gradle
+
+buildscript {
+    ext.kotlin_version = '2.1.0' // Use the version from your settings.gradle.kts
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        // START: FlutterFire Configuration
+        classpath 'com.google.gms:google-services:4.3.15'
+        // END: FlutterFire Configuration
+        // The version numbers here should match what you see, e.g., Android Gradle Plugin (AGP) 
+        // Ensure you have a recent version of the Android Gradle Plugin (AGP) here
+        classpath 'com.android.tools.build:gradle:8.4.2' // Replace with your version (e.g., 7.4.2, 8.4.2)
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+allprojects {
+    repositories {
+        // Only include standard repositories here.
+        // The Flutter repository is now correctly linked via settings.gradle.kts.
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.buildDir = file('build')
+subprojects {
+    project.buildDir = file("${rootProject.buildDir}/${project.name}")
+}
+tasks.register('clean', Delete) {
+    delete rootProject.buildDir
+}
