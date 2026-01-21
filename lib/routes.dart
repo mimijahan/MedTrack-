@@ -1,5 +1,3 @@
-// lib/routes.dart (FINAL FIXED VERSION)
-
 import 'package:flutter/material.dart';
 
 // Import all necessary screens and the shell widget
@@ -10,39 +8,33 @@ import 'screens/signup_screen.dart';
 import 'screens/health_monitor_screen.dart';
 import 'screens/timer_screen.dart';
 import 'screens/scheduling_screen.dart';
-import 'screens/settings_screen.dart'; // REQUIRED: New Settings Import
+import 'screens/settings_screen.dart'; 
 
 class AppRoutes {
   // --- Route Name Constants ---
   static const String welcome = '/';
   static const String signup = '/signup';
   static const String login = '/login';
-
-  // These routes now point to the MainAppShell wrapper
-  static const String pillReminder =
-      '/pill_reminder'; // Authenticated User Home
-  static const String guestMode = '/guest_pill_reminder'; // Guest User Home
-
+  static const String mainAppShell = '/mainAppShell';
+  static const String pillReminder = '/pill_reminder';
+  static const String guestMode = '/guest_pill_reminder';
   static const String healthMonitor = '/health_monitor';
   static const String focusTimer = '/focus_timer';
   static const String scheduling = '/scheduling';
-  static const String settings = '/settings'; // REQUIRED: New Settings Route
+  static const String settings = '/settings';
 
   // --- Centralized Route Map ---
   static Map<String, WidgetBuilder> get routes => {
-    // Mapping the route names to the actual screen widgets
-    welcome: (context) => const WelcomeScreen(),
     signup: (context) => const SignupScreen(),
     login: (context) => const LoginScreen(),
-
-    // Direct Screen Mappings (for testing/deep links)
     healthMonitor: (context) => const HealthMonitorScreen(),
     focusTimer: (context) => const TimerScreen(),
     scheduling: (context) => const SchedulingScreen(),
-    settings: (context) =>
-        const SettingsScreen(), // REQUIRED: New Settings Mapping
-    // Main Shell Wrappers (Home)
+    settings: (context) => const SettingsScreen(),
+    
+    // Main Shell Wrappers
     pillReminder: (context) => const MainAppShell(isGuest: false),
     guestMode: (context) => const MainAppShell(isGuest: true),
+    mainAppShell: (context) => const MainAppShell(isGuest: false),
   };
-}
+} // This is the closing brace the compiler was missing!

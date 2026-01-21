@@ -2,29 +2,68 @@
 
 import 'package:flutter/material.dart';
 import 'package:medtrack_app/routes.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
-  // Placeholder function for login logic
-  void _handleLogin(BuildContext context) {
-    // In a real application, this is where you would call Firebase Auth:
-    // 1. Validate email/password
-    // 2. Call signInWithEmailAndPassword
-    // 3. Handle success or failure
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
 
-    // --- SIMULATION: Navigate to the full, authenticated app experience ---
-    Navigator.of(context).pushReplacementNamed(AppRoutes.pillReminder);
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
-  // NEW: Placeholder function for social login logic
+  Future<void> _handleLogin(BuildContext context) async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed(AppRoutes.mainAppShell);
+      
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'Login failed';
+      if (e.code == 'user-not-found') {
+        errorMessage = 'No user found with this email.';
+      } else if (e.code == 'wrong-password') {
+        errorMessage = 'Wrong password provided.';
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'The email address is badly formatted.';
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   void _handleSocialLogin(BuildContext context, String provider) {
-    // In a real application, this would call a social sign-in method
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Simulating login with $provider...')),
+      SnackBar(content: Text('Login with $provider requires additional configuration.')),
     );
-    // Simulate successful navigation
-    Navigator.of(context).pushReplacementNamed(AppRoutes.pillReminder);
   }
 
   @override
@@ -40,9 +79,7 @@ class LoginScreen extends StatelessWidget {
           padding: const EdgeInsets.all(32.0),
           child: Card(
             elevation: 8,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
@@ -52,102 +89,92 @@ class LoginScreen extends StatelessWidget {
                   Text(
                     'Welcome Back',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 25),
 
-                  // Email Input
+                  // Email Input - FIXED VISIBILITY
                   TextFormField(
+                    controller: _emailController,
+                    style: const TextStyle(color: Colors.white), // Added white text
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
                       labelText: 'Email',
+                      labelStyle: TextStyle(color: Colors.white70),
                       border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.email),
+                      prefixIcon: Icon(Icons.email, color: Colors.white70),
                     ),
                   ),
                   const SizedBox(height: 15),
 
-                  // Password Input
+                  // Password Input - FIXED VISIBILITY
                   TextFormField(
+                    controller: _passwordController,
+                    style: const TextStyle(color: Colors.white), // Added white text
                     obscureText: true,
                     decoration: const InputDecoration(
                       labelText: 'Password',
+                      labelStyle: TextStyle(color: Colors.white70),
                       border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.lock),
-                      // IMPROVEMENT: Add a toggle icon here in a real app
+                      prefixIcon: Icon(Icons.lock, color: Colors.white70),
                     ),
                   ),
                   const SizedBox(height: 5),
 
-                  // Forgot Password?
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {
-                        // Placeholder for navigation
-                      },
+                      onPressed: () {}, 
                       child: const Text('Forgot password?'),
                     ),
                   ),
                   const SizedBox(height: 20),
 
-                  // Standard Login Button
                   ElevatedButton(
-                    onPressed: () => _handleLogin(context),
+                    onPressed: _isLoading ? null : () => _handleLogin(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).primaryColor,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
-                    child: const Text('Login', style: TextStyle(fontSize: 18)),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : const Text('Login', style: TextStyle(fontSize: 18)),
                   ),
 
-                  // NEW: Divider for Social Login
                   const SizedBox(height: 30),
                   Row(
                     children: [
                       const Expanded(child: Divider()),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Text(
-                          'OR',
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
+                        child: Text('OR', style: TextStyle(color: Colors.grey[400])),
                       ),
                       const Expanded(child: Divider()),
                     ],
                   ),
                   const SizedBox(height: 30),
 
-                  // NEW: Social Login Button (Simulated Google Sign-in)
                   OutlinedButton.icon(
                     onPressed: () => _handleSocialLogin(context, 'Google'),
-                    icon: const Icon(
-                      Icons.g_mobiledata,
-                      size: 30,
-                    ), // Placeholder icon
+                    icon: const Icon(Icons.g_mobiledata, size: 30),
                     label: const Text('Sign in with Google'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      side: BorderSide(color: Colors.grey.shade700, width: 1.5),
                     ),
                   ),
 
-                  // End of New Section
                   const SizedBox(height: 20),
-
-                  // Link to Sign Up Screen
                   TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pushNamed(AppRoutes.signup);
-                    },
+                    onPressed: () => Navigator.of(context).pushNamed(AppRoutes.signup),
                     child: const Text("Don't have an account? Sign Up"),
                   ),
                 ],
